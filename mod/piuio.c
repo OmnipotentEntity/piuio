@@ -18,11 +18,6 @@
 #include <linux/bitops.h>
 #include <linux/input.h>
 #include <linux/usb.h>
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
-#include <linux/usb_input.h>
-#else
-#include <linux/usb/input.h>
-#endif
 
 
 /*
@@ -84,6 +79,21 @@
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,14)
 #define kzalloc(s, f) (kmalloc((s), (f) | __GFP_ZERO))
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,13)
+static inline void
+usb_to_input_id(const struct usb_device *dev, struct input_id *id)
+{
+	id->bustype = BUS_USB;
+	id->vendor = le16_to_cpu(dev->descriptor.idVendor);
+	id->product = le16_to_cpu(dev->descriptor.idProduct);
+	id->version = le16_to_cpu(dev->descriptor.bcdDevice);
+}
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
+#include <linux/usb_input.h>
+#else
+#include <linux/usb/input.h>
 #endif
 
 
