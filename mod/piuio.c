@@ -46,6 +46,15 @@
 #define PIUIO_MULTIPLEX 4
 
 
+/*
+ * Compatibility
+ */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)
+#define usb_alloc_coherent usb_buffer_alloc
+#define usb_free_coherent usb_buffer_free
+#endif
+
+
 /**
  * struct piuio - state of each attached PIUIO
  * @dev:	input device associated with this PIUIO
