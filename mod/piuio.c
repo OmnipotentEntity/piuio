@@ -61,6 +61,9 @@
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
 #define input_set_drvdata(dev, data) ((dev)->private = (data))
 #define input_get_drvdata(dev) ((dev)->private)
+#define set_idev_parent(d, p) ((d)->cdev.dev = (p))
+#else
+#define set_idev_parent(d, p) ((d)->dev.parent = (p))
 #endif
 
 
@@ -283,7 +286,7 @@ static void piuio_input_init(struct piuio *piu, struct device *parent)
 	dev->name = "PIUIO input";
 	dev->phys = piu->phys;
 	usb_to_input_id(piu->usbdev, &dev->id);
-	dev->dev.parent = parent;
+	set_idev_parent(dev, parent);
 
 	/* HACK: Buttons are sufficient to trigger a /dev/input/js* device, but
 	 * for systemd (and consequently udev and Xorg) to consider us a
