@@ -65,6 +65,11 @@
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
 #define input_set_drvdata(dev, data) ((dev)->private = (data))
 #define input_get_drvdata(dev) ((dev)->private)
+#endif
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15)
+#define set_idev_parent(d, p) ((d)->dev = (p))
+#elif LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
 #define set_idev_parent(d, p) ((d)->cdev.dev = (p))
 #else
 #define set_idev_parent(d, p) ((d)->dev.parent = (p))
