@@ -70,6 +70,13 @@
 #define set_idev_parent(d, p) ((d)->dev.parent = (p))
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15)
+#define PIU_DEV(piu) (&(piu)->dev)
+#else
+#define PIU_DEV(piu) ((piu)->dev)
+#define init_input_dev(d)
+#endif
+
 
 /**
  * struct piuio - state of each attached PIUIO
@@ -92,7 +99,11 @@
  * @set:	current set of inputs to read, (0 .. PIUIO_MULTIPLEX - 1)
  */
 struct piuio {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,15)
+	struct input_dev dev;
+#else
 	struct input_dev *dev;
+#endif
 	char phys[64];
 
 	struct usb_device *usbdev;
@@ -185,7 +196,7 @@ static void piuio_in_completed(struct urb *urb
 	}
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
-	input_regs(piu->dev, regs);
+	input_regs(PIU_DEV(piu), regs);
 #endif
 
 	/* Find and report any inputs which have changed state */
@@ -196,13 +207,13 @@ static void piuio_in_completed(struct urb *urb
 			b = __ffs(changed[i]);
 			clear_bit(b, &changed[i]);
 			/* and report the corresponding press or release. */
-			report_key(piu->dev, i * BITS_PER_LONG + b,
+			report_key(PIU_DEV(piu), i * BITS_PER_LONG + b,
 					!test_bit(b, &piu->new[i]));
 		}
 	}
 
 	/* Done reporting input events */
-	input_sync(piu->dev);
+	input_sync(PIU_DEV(piu));
 
 resubmit:
 	i = usb_submit_urb(urb, GFP_ATOMIC);
@@ -295,8 +306,10 @@ static void piuio_close(struct input_dev *dev)
  */
 static void piuio_input_init(struct piuio *piu, struct device *parent)
 {
-	struct input_dev *dev = piu->dev;
+	struct input_dev *dev = PIU_DEV(piu);
 	int i;
+
+	init_input_dev(dev);
 
 	/* Fill in basic fields */
 	dev->name = "PIUIO input";
@@ -344,7 +357,6 @@ static int piuio_init(struct piuio *piu, struct input_dev *dev,
 					GFP_KERNEL, &piu->out_dma)))
 		return -ENOMEM;
 
-	piu->dev = dev;
 	piu->usbdev = usbdev;
 	usb_make_path(usbdev, piu->phys, sizeof(piu->phys));
 	strlcat(piu->phys, "/input0", sizeof(piu->phys));
@@ -402,11 +414,16 @@ static int piuio_probe(struct usb_interface *iface,
 	if (!piu)
 		return ret;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15)
 	dev = input_allocate_device();
 	if (!dev) {
 		kfree(piu);
 		return ret;
 	}
+	piu->dev = dev;
+#else
+	dev = PIU_DEV(piu);
+#endif
 
 	/* Initialize PIUIO state and input device */
 	ret = piuio_init(piu, dev, usbdev);
@@ -416,9 +433,13 @@ static int piuio_probe(struct usb_interface *iface,
 	piuio_input_init(piu, &iface->dev);
 
 	/* Register input device */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15)
 	ret = input_register_device(piu->dev);
 	if (ret)
 		goto err;
+#else
+	input_register_device(&piu->dev);
+#endif
 
 	/* Final USB setup */
 	usb_set_intfdata(iface, piu);
@@ -429,7 +450,9 @@ static int piuio_probe(struct usb_interface *iface,
 
 err:
 	piuio_destroy(piu);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15)
 	input_free_device(dev);
+#endif
 	kfree(piu);
 	return ret;
 }
@@ -446,7 +469,7 @@ static void piuio_disconnect(struct usb_interface *intf)
 
 	usb_kill_urb(piu->in);
 	usb_kill_urb(piu->out);
-	input_unregister_device(piu->dev);
+	input_unregister_device(PIU_DEV(piu));
 	piuio_destroy(piu);
 	kfree(piu);
 }
