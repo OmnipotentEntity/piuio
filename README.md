@@ -1,6 +1,15 @@
 PIUIO input driver for Linux
 ============================
 
+*Well hello there!*  Terrified of change?  You've come to the right place.
+Welcome to the legacy branch of the PIUIO driver.  This branch contains hacks
+to get it compile all the way back to Linux 2.6.12, but it is neither actively
+tested nor actively maintained.  Patches and pull requests are still welcome,
+but they are entirely your responsibiity.
+
+You are, of course, strongly encouraged to upgrade to the latest kernel and the
+*real* driver!
+
 This is a driver for the PIUIO arcade I/O board that maps panels and buttons to
 a standard Linux event interface, typically appearing as a joystick.  It is
 coded assuming the default configuration where four sets of inputs are attached
