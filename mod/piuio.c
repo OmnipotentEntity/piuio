@@ -35,13 +35,6 @@
 #define PIUIO_MSG_SZ 8
 #define PIUIO_MSG_LONGS (PIUIO_MSG_SZ / sizeof(unsigned long))
 
-/* Number of usable inputs per set */
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)
-#define PIUIO_INPUTS 32
-#else
-#define PIUIO_INPUTS 48
-#endif
-
 /* Number of sets of inputs multiplexed together */
 #define PIUIO_MULTIPLEX 4
 
@@ -52,6 +45,11 @@
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)
 #define usb_alloc_coherent usb_buffer_alloc
 #define usb_free_coherent usb_buffer_free
+#define PIUIO_INPUTS 32
+#define BTN_OVERFLOW_RANGE BTN_GAMEPAD
+#else
+#define PIUIO_INPUTS 48
+#define BTN_OVERFLOW_RANGE BTN_TRIGGER_HAPPY
 #endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
@@ -113,11 +111,7 @@ static int keycode(unsigned int pin)
 	if (pin < 16)
 		return BTN_JOYSTICK + pin;
 	pin -= 16;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)
-	return BTN_GAMEPAD + pin;
-#else
-	return BTN_TRIGGER_HAPPY + pin;
-#endif
+	return BTN_OVERFLOW_RANGE + pin;
 }
 
 static void report_key(struct input_dev *dev, unsigned int pin, int press)
