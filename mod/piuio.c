@@ -422,7 +422,9 @@ static int piuio_probe(struct usb_interface *iface,
 
 	/* Final USB setup */
 	usb_set_intfdata(iface, piu);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,15)
 	device_set_wakeup_enable(&usbdev->dev, 1);
+#endif
 	return 0;
 
 err:
