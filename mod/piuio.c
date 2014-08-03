@@ -18,7 +18,11 @@
 #include <linux/bitops.h>
 #include <linux/input.h>
 #include <linux/usb.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
+#include <linux/usb_input.h>
+#else
 #include <linux/usb/input.h>
+#endif
 
 
 /*
