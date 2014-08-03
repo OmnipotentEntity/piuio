@@ -57,9 +57,9 @@
 #endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23)
-#define PIU_DEV(x) (&(x)->usbdev->dev)
+#define PIU_ERR_DEV(x) (&(x)->usbdev->dev)
 #else
-#define PIU_DEV(x) (&(x)->dev->dev)
+#define PIU_ERR_DEV(x) (&(x)->dev->dev)
 #endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,22)
@@ -207,7 +207,7 @@ static void piuio_in_completed(struct urb *urb
 resubmit:
 	i = usb_submit_urb(urb, GFP_ATOMIC);
 	if (i) {
-		dev_err(PIU_DEV(piu),
+		dev_err(PIU_ERR_DEV(piu),
 				"usb_submit_urb(new) failed, status %d", i);
 	}
 }
@@ -229,8 +229,8 @@ static void piuio_out_completed(struct urb *urb
 		case -ESHUTDOWN:
 			return;
 		default:		/* error */
-			dev_warn(PIU_DEV(piu), "out urb status %d received\n",
-					ret);
+			dev_warn(PIU_ERR_DEV(piu),
+					"out urb status %d received\n", ret);
 			break;
 	}
 
@@ -252,7 +252,7 @@ static void piuio_out_completed(struct urb *urb
 	
 	ret = usb_submit_urb(piu->out, GFP_ATOMIC);
 	if (ret) {
-		dev_err(PIU_DEV(piu),
+		dev_err(PIU_ERR_DEV(piu),
 				"usb_submit_urb(lights) failed, status %d\n",
 				ret);
 	}
