@@ -429,4 +429,15 @@ MODULE_AUTHOR("Devin J. Pohly");
 MODULE_DESCRIPTION("PIUIO input/output driver");
 MODULE_LICENSE("GPL");
 
-module_usb_driver(piuio_driver);
+static int __init piuio_module_init(void)
+{
+	return usb_register(&piuio_driver);
+}
+
+static void __exit piuio_module_exit(void)
+{
+	usb_deregister(&piuio_driver);
+}
+
+module_init(piuio_module_init);
+module_exit(piuio_module_exit);
