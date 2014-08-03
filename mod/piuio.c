@@ -11,6 +11,7 @@
  */
 
 #include <linux/kernel.h>
+#include <linux/version.h>
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/errno.h>
@@ -35,7 +36,11 @@
 #define PIUIO_MSG_LONGS (PIUIO_MSG_SZ / sizeof(unsigned long))
 
 /* Number of usable inputs per set */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)
+#define PIUIO_INPUTS 32
+#else
 #define PIUIO_INPUTS 48
+#endif
 
 /* Number of sets of inputs multiplexed together */
 #define PIUIO_MULTIPLEX 4
@@ -86,13 +91,18 @@ struct piuio {
  */
 static int keycode(unsigned int pin)
 {
-	/* Use joystick buttons first, then the extra "trigger happy" range. */
+	/* Use joystick buttons first, then overflow into the extra "trigger
+	 * happy" range, or the gamepad range if that isn't supported. */
 	if (pin >= PIUIO_INPUTS)
 		return KEY_RESERVED;
 	if (pin < 16)
 		return BTN_JOYSTICK + pin;
 	pin -= 16;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)
+	return BTN_GAMEPAD + pin;
+#else
 	return BTN_TRIGGER_HAPPY + pin;
+#endif
 }
 
 static void report_key(struct input_dev *dev, unsigned int pin, int press)
