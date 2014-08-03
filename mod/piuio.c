@@ -137,7 +137,11 @@ static void report_key(struct input_dev *dev, unsigned int pin, int press)
 /*
  * URB completion handlers
  */
-static void piuio_in_completed(struct urb *urb)
+static void piuio_in_completed(struct urb *urb
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
+		, struct pt_regs *regs
+#endif
+		)
 {
 	struct piuio *piu = urb->context;
 	unsigned long changed[PIUIO_MSG_LONGS];
@@ -176,6 +180,10 @@ static void piuio_in_completed(struct urb *urb)
 			changed[i] &= piu->old[s][i];
 	}
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
+	input_regs(piu->dev, regs);
+#endif
+
 	/* Find and report any inputs which have changed state */
 	for (i = 0; i < PIUIO_MSG_LONGS; i++) {
 		/* As long as some bit is still set... */
@@ -200,7 +208,11 @@ resubmit:
 	}
 }
 
-static void piuio_out_completed(struct urb *urb)
+static void piuio_out_completed(struct urb *urb
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,19)
+		, struct pt_regs *regs
+#endif
+		)
 {
 	struct piuio *piu = urb->context;
 	int ret = urb->status;
