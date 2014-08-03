@@ -82,6 +82,10 @@
 #define init_input_dev(d)
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,14)
+#define kzalloc(s, f) (kmalloc((s), (f) | __GFP_ZERO))
+#endif
+
 
 /**
  * struct piuio - state of each attached PIUIO
